@@ -1,7 +1,11 @@
 import java.io.IOException;
 import java.net.*;
+import java.util.Random;
 
 public class Main {
+    public static int[] currentValues = new int[11];
+    public static Random random = new Random();
+
     public static void main(String[] args) {
         run("192.168.240.221", 365);
     }
@@ -17,7 +21,7 @@ public class Main {
                     getMessage(socket);
                 }catch(SocketTimeoutException e) {
                     // LogClass.logger.log(Level.INFO, "Timeout has occurred on port " + this.port);
-                    System.out.println("Timeout");
+                    printCurrent();
                 }
             }
         } catch (IOException e) {
@@ -38,16 +42,31 @@ public class Main {
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         socket.receive(packet);
 
-        System.out.println("Recieved: " + buffer[0] + ", " + buffer[1]);
+        System.out.println("\t\t\t Recieved: " + buffer[0] + ", " + buffer[1]);
+        currentValues[buffer[0]] = buffer[1];
+        printCurrent();
 
         try (DatagramSocket socketNew = new DatagramSocket(null)) {
             SocketAddress address = packet.getSocketAddress();
-            byte[] message = { 1 };
+            byte[] message = { 0 };
+            if(random.nextFloat() < 0.1f) //Error Simulation
+                message[0] = 2;
 
             DatagramPacket response = new DatagramPacket(message, message.length, address);
             socketNew.send(response);
         }
 
         System.out.println("Sent acknowledgement");
+    }
+
+    public static void printCurrent() {
+        StringBuilder stringBuilder = new StringBuilder("[");
+        for(int i : currentValues) {
+            stringBuilder.append(i);
+            stringBuilder.append(", ");
+        }
+        stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length() - 1);
+        stringBuilder.append("]");
+        System.out.println(stringBuilder.toString());
     }
 }
